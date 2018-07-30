@@ -17,4 +17,9 @@
   <ItemGroup>
     <None Include="Arduino - LLAP wireless temp display.ino" />
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="__vm\.Arduino - LLAP wireless temp display.vsarduino.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
 </Project>
