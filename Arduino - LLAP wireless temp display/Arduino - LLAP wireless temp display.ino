@@ -6,13 +6,11 @@
 
 // This will catch the LLAP packets and display it
 
-#include <SPI.h>
-#include <gfxfont.h>
-#include <Adafruit_SPITFT_Macros.h>
+//#include <gfxfont.h>
 #include <Adafruit_SPITFT.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_PCD8544.h>
-#include <LLAPSerial.h>
+
 
 // Software SPI (slower updates, more flexible pin options):
 // pin 7 - Serial clock out (SCLK)
@@ -34,6 +32,15 @@ Adafruit_PCD8544 display = Adafruit_PCD8544(5, 4, 3);
 
 const byte numChars = 13; //12 bytes for LLAP message and 1 more byte for the termination of the string
 char LLAPmessage[numChars];
+char LLAPpacketID[3];
+char LLAPpacketMessage[10];
+char LLAPtempMessage[5];
+char LLAPtempCelcius[6];
+char LLAPbattVoltage[5];
+char Message[9];
+String batteryvoltage = "";
+int batteryInfo = 0;
+
 boolean FullPacket_Recieved = false;
 
 void setup()
@@ -41,11 +48,14 @@ void setup()
 	Serial.begin(9600);
 	pinMode(8, OUTPUT); // switch on the radio
 	digitalWrite(8, HIGH);
-	delay(1000); // allow the radio to startup
+	delay(300); // allow the radio to startup
 	
 	display.begin();
 	display.setContrast(60);
-	
+	display.display(); // show splashscreen
+	delay(500);
+	display.clearDisplay(); // clears the screen and buffer
+	display.display();
 
 	Serial.println("<Arduino is ready>");
 }
@@ -97,12 +107,100 @@ void SendLLAPpacket()
 {
 	if (FullPacket_Recieved == true)
 	{
-		//Serial.print("This just in ... ");
 		Serial.println(LLAPmessage);
+		//Serial.println(LLAPtempCelcius);
+		// Break the LLAP into parts
+		// Device ID
+		for (int i = 1; i <= 2; i++)
+		{
+			LLAPpacketID[i - 1] = LLAPmessage[i];
+			//LLAPpacketID[0] = LLAPmessage[1];
+			//LLAPpacketID[1] = LLAPmessage[2]; this will do the same, but messier
+		}
+		
+		// Message
+		for (int i =1; i <=9; i++)
+		{
+			LLAPpacketMessage[i - 1] = LLAPmessage[i + 2];
+			/*LLAPpacketMessage[0] = LLAPmessage[3];
+			LLAPpacketMessage[1] = LLAPmessage[4];
+			LLAPpacketMessage[2] = LLAPmessage[5];
+			LLAPpacketMessage[3] = LLAPmessage[6];
+			LLAPpacketMessage[4] = LLAPmessage[7];
+			LLAPpacketMessage[5] = LLAPmessage[8];
+			LLAPpacketMessage[6] = LLAPmessage[9];
+			LLAPpacketMessage[7] = LLAPmessage[10];
+			LLAPpacketMessage[8] = LLAPmessage[11];
+			LLAPpacketMessage[9] = LLAPmessage[12];
+			*/
+		}
+		
+		//temp signal
+		for (int i = 0; i <= 3; i++)
+		{
+			LLAPtempMessage[i] = LLAPmessage[i +3];
+			/*LLAPtempMessage[0] = LLAPmessage[3];
+			LLAPtempMessage[1] = LLAPmessage[4];
+			LLAPtempMessage[2] = LLAPmessage[5];
+			LLAPtempMessage[3] = LLAPmessage[6];
+			*/
+		}
 
+		//Temp Celcius
+		for (int i=0; i <=4; i++)
+		{
+			LLAPtempCelcius[i] = LLAPmessage[i + 7];
+		}
+		//also convert to farenheit
+
+		float Celcius = atof(LLAPtempCelcius);
+		float fahrenheit = (Celcius * 9.0) / 5.0 + 32;
+
+		//Battery voltage
+		for (int i = 0; i <= 3; i++)
+		{
+			LLAPbattVoltage[i] = LLAPmessage[i + 7];
+		}
+		
+
+		
+		String compare(LLAPtempMessage);
+		if (compare == "BATT")
+		{
+			batteryInfo = 1;
+			batteryvoltage = LLAPbattVoltage;
+		}
+
+		if (compare == "TMPA")
+		{
+			display.clearDisplay();
+			display.setTextSize(1);
+			display.setTextColor(BLACK);
+			display.setCursor(0, 2);
+			display.print("  ");
+			display.print(LLAPtempCelcius);
+			display.print(" C");
+			display.setCursor(0, 15);
+			display.print("  ");
+			display.print(fahrenheit);
+			display.print(" F");
+			if (batteryInfo == 1)
+			{
+				display.setCursor(0, 30);
+				display.print("BATT: ");
+				display.print(batteryvoltage);
+			}
+
+		}
+		
+		//display.println(LLAPpacketMessage);
+		//display.setCursor(0,20);
+		//display.println(LLAPmessage);
+		display.display();
 		FullPacket_Recieved = false;
 	}
 }
+
 
 void loop()
 {
