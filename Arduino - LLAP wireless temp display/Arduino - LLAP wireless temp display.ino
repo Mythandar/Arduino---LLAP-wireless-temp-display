@@ -49,14 +49,46 @@ void setup()
 	pinMode(8, OUTPUT); // switch on the radio
 	digitalWrite(8, HIGH);
 	delay(300); // allow the radio to startup
-	
+
 	display.begin();
 	display.setContrast(60);
 	display.display(); // show splashscreen
-	delay(500);
+	delay(200);
 	display.clearDisplay(); // clears the screen and buffer
 	display.display();
 
+	//pinMode(10, INPUT_PULLUP);
+	//delay(30);
+	/* if (digitalRead(10) == LOW)
+	{
+		Serial.begin(9600);
+		pinMode(8, OUTPUT); // switch on the radio
+		digitalWrite(8, HIGH);
+		delay(300); // allow the radio to startup
+		Serial.write("+++\r\n");
+		delay(30);
+		Serial.write("ATBD 2580\r\n");
+		delay(30);
+		Serial.write("ATAC\r\n");
+		Serial.println("Button pressed and set to 9600 for programming");
+	}
+	else if (digitalRead(10) == HIGH)
+	{
+		Serial.begin(115200);
+		pinMode(8, OUTPUT); // switch on the radio
+		digitalWrite(8, HIGH);
+		delay(300); // allow the radio to startup
+		Serial.write("+++\r\n");
+		delay(30);
+		Serial.write("ATBD 1C200\r\n");
+		delay(30);
+		Serial.write("ATAC\r\n");
+	}
+	
+	pinMode(8, OUTPUT); // switch on the radio
+	digitalWrite(8, HIGH);
+	delay(300); // allow the radio to startup
+	*/
 	Serial.println("<Arduino is ready>");
 }
 
@@ -107,9 +139,11 @@ void SendLLAPpacket()
 {
 	if (FullPacket_Recieved == true)
 	{
-		Serial.println(LLAPmessage);
+		//Serial.println(LLAPmessage);
 		//Serial.println(LLAPtempCelcius);
+
 		// Break the LLAP into parts
+
 		// Device ID
 		for (int i = 1; i <= 2; i++)
 		{
